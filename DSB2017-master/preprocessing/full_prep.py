@@ -127,4 +127,3 @@ def full_prep(data_path,prep_folder,n_worker = None,use_existing=True):
     print('end preprocessing')
     return filelist
 
-L = full_prep('J:\\dataset\\LIDC-IDRI\\','J:\\DD')

@@ -7,8 +7,6 @@ import matplotlib.pyplot as plt
 
 from skimage import measure, morphology
 
-from skimage import measure, morphology
-
 
 
 def load_scan(path):
@@ -23,7 +21,7 @@ def load_scan(path):
         sec_num = 2;
         while slices[0].ImagePositionPatient[2] == slices[sec_num].ImagePositionPatient[2]:
             sec_num = sec_num+1;
-        slice_num = int(len(slices) / sec_num)
+        slice_num = int(len(slices) / sec_num)  #只选取slice_num个片子
         slices.sort(key = lambda x:float(x.InstanceNumber))
         slices = slices[0:slice_num]
         slices.sort(key = lambda x:float(x.ImagePositionPatient[2]))
@@ -233,7 +231,20 @@ def two_lung_only(bw, spacing, max_iter=22, max_ratio=4.8):
     return bw1, bw2, bw
 
 def step1_python(case_path):
-    case = load_scan(case_path)
+    pathOfFilesDCM = []
+    for dirName, subdirList, fileList in os.walk(case_path):
+        for filename in fileList:
+            if '.dcm' in filename.lower():
+                pathOfFilesDCM.append(dirName)
+                break 
+    L1 = os.listdir(pathOfFilesDCM[0])
+    L2 = os.listdir(pathOfFilesDCM[1])
+    if len(L1) >= len(L2):
+        pathOfFilesDCM.remove(pathOfFilesDCM[1])
+    else:
+        pathOfFilesDCM.remove(pathOfFilesDCM[0])
+
+    case = load_scan(pathOfFilesDCM[0])
     case_pixels, spacing = get_pixels_hu(case)
     bw = binarize_per_slice(case_pixels, spacing)
     flag = 0
@@ -250,30 +261,13 @@ def step1_python(case_path):
     return case_pixels, bw1, bw2, spacing
     
 if __name__ == '__main__':
-    INPUT_FOLDER = 'J:\\dataset\\LIDC-IDRI\\'
+    INPUT_FOLDER = 'E:\\DeepLearning\\Pulmonary_nodule_detection\\DataSet\\LIDC-IDRI\\'
     patients = os.listdir(INPUT_FOLDER)
     patients.sort()
-    
-    
-    #print(type(INPUT_FOLDER))
-    #print(type(patients))
-    
-    lstFilesDCM = []
-    for dirName, subdirList, fileList in os.walk(os.path.join(INPUT_FOLDER,patients[25])):
-        #print(fileList)
-        for filename in fileList:
-            if '.dcm' in filename.lower():
-                lstFilesDCM.append(dirName)
-                break
-                #print(dirName)
-    #print(lstFilesDCM)    
-    
-    
-     
-    case_pixels, m1, m2, spacing = step1_python(lstFilesDCM[0])
-    plt.imshow(m1[60])
+    case_pixels, m1, m2, spacing = step1_python(os.path.join(INPUT_FOLDER,patients[0]))
+    plt.imshow(m1[10])
     plt.figure()
-    plt.imshow(m2[60])
+    plt.imshow(m2[10])
 #     first_patient = load_scan(INPUT_FOLDER + patients[25])
 #     first_patient_pixels, spacing = get_pixels_hu(first_patient)
 #     plt.hist(first_patient_pixels.flatten(), bins=80, color='c')
